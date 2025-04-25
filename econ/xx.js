@@ -4,7 +4,7 @@ const db = new QuickDB();
 
 // Mapeamento de emojis personalizados (atualize com IDs reais)
 const emotes = {
-  varadepesca: '<:varadepesca:1365397727198052562> ',
+  varadepesca: '<:varadepesca:1365397727198052562>',
   moeda: '<:emoji_26:1077739873143890011>',
   isca_magnetica: '<:iscamagnetica:1280258865606164652>',
   isca_dupla: '<:iscadupla:1365398227636981780>',
@@ -132,7 +132,7 @@ module.exports = {
           const rewards = [];
           // Valor do peixe
           await db.add(`wallet_${userId}`, fish.value);
-          rewards.push(`${emotes[fish.key]} **${fish.name}** ${emotes.moeda}${fish.value}`);
+          rewards.push(`${emotes[fish.key]} ${fish.name} ${emotes.moeda}${fish.value}`);
           // Remove vara
           await db.add(`inventory_${userId}.vara_de_pesca`, -1);
 
@@ -142,7 +142,7 @@ module.exports = {
             const has = await db.get(`achievements_${userId}.fish_legendary`);
             if (!has) {
               await db.set(`achievements_${userId}.fish_legendary`, true);
-              extras.push('🏆 Conquista desbloqueada: **Pesque um Peixe Lendário**');
+              extras.push('🏆 Conquista desbloqueada: Pesque um Peixe Lendário');
             }
           }
 
@@ -151,20 +151,17 @@ module.exports = {
           if (selectedBait) {
             const qty = await db.get(`inventory_${userId}.${selectedBait}`) || 0;
             if (qty > 0) {
-              // Exemplificando efeito de isca dupla/tripla
               if (selectedBait === 'isca_dupla') {
-                // 2 peixes
                 for (let i = 0; i < 2; i++) {
                   const extraFish = fishTypes[Math.floor(Math.random() * fishTypes.length)];
                   await db.add(`wallet_${userId}`, extraFish.value);
-                  rewards.push(`${emotes[extraFish.key]} **${extraFish.name} (extra)** ${emotes.moeda}${extraFish.value}`);
+                  rewards.push(`${emotes[extraFish.key]} ${extraFish.name} (extra) ${emotes.moeda}${extraFish.value}`);
                 }
               } else if (selectedBait === 'isca_tripla') {
-                // 3 peixes
                 for (let i = 0; i < 3; i++) {
                   const extraFish = fishTypes[Math.floor(Math.random() * fishTypes.length)];
                   await db.add(`wallet_${userId}`, extraFish.value);
-                  rewards.push(`${emotes[extraFish.key]} **${extraFish.name} (extra)** ${emotes.moeda}${extraFish.value}`);
+                  rewards.push(`${emotes[extraFish.key]} ${extraFish.name} (extra) ${emotes.moeda}${extraFish.value}`);
                 }
               } else if (selectedBait === 'isca_magnetica') {
                 if (Math.random() < 0.5) {
@@ -179,17 +176,16 @@ module.exports = {
                     ];
                     const chest = chestTypes[Math.floor(Math.random() * chestTypes.length)];
                     await db.add(`wallet_${userId}`, chest.value);
-                    rewards.push(`🎁 **${chest.name}** ${emotes.moeda}${chest.value}`);
+                    rewards.push(`🎁 ${chest.name} ${emotes.moeda}${chest.value}`);
                   } else {
                     extras.push('🔍 Era só uma tralha qualquer.');
                   }
                 }
                 if (Math.random() < 0.3) {
                   await db.add(`inventory_${userId}.isca_magnetica`, -1);
-                  losses.push('💔 Sua **Isca Magnética** quebrou!');
+                  losses.push('💔 Sua Isca Magnética quebrou!');
                 }
               }
-              // remove durability da isca comum/epecial etc
               await db.add(`inventory_${userId}.${selectedBait}`, -1);
             }
           }
@@ -202,8 +198,8 @@ module.exports = {
 
           const resultEmbed = new EmbedBuilder()
             .setTitle('🎣 Resultado da Pesca')
-            .setDescription(lines.join('\n----------------------------------------------------------\n'))
-            .setFooter({ text: `${emotes.varadepesca} **${selectedBait ? selectedBait.replace('isca_', '').toUpperCase() + ' ATIVA**' : 'Nenhuma Isca**'}` });
+            .setDescription(lines.join('\n\n----------------------------------------------------------\n'))
+            .setFooter({ text: `${emotes.varadepesca}  **${selectedBait ? selectedBait.replace('isca_', '').toUpperCase() + ' ATIVA**' : 'Nenhuma Isca ATIVA**'}` });
 
           await fishMsg.edit({ embeds: [resultEmbed], components: [] });
         });
@@ -213,7 +209,7 @@ module.exports = {
             const escapeEmbed = new EmbedBuilder()
               .setTitle('🚨 O Peixe Fugiu!')
               .setDescription('O peixe escapou enquanto você hesitava!')
-              .setFooter({ text: `${emotes.varadepesca} **${selectedBait ? selectedBait.replace('isca_', '').toUpperCase() + ' ATIVA**' : 'Nenhuma Isca**'}` })
+              .setFooter({ text: `${emotes.varadepesca}  **${selectedBait ? selectedBait.replace('isca_', '').toUpperCase() + ' ATIVA**' : 'Nenhuma Isca ATIVA**'}` })
               .setColor('#FF4500');
             await fishMsg.edit({ embeds: [escapeEmbed], components: [] });
           }
