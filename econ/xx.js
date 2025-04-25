@@ -6,7 +6,7 @@ const db = new QuickDB();
 const emotes = {
   varadepesca: '<:varadepesca:1365397727198052562> ',
   moeda: '<:emoji_26:1077739873143890011>',
-  isca_magnetica: '<:isca_magnetica:ID>',
+  isca_magnetica: '<:iscamagnetica:1280258865606164652>',
   isca_dupla: '<:iscadupla:1365398227636981780>',
   isca_tripla: '<:iscatripla:1365397725201436702>',
   isca_comum: '<:iscadepesca:1365398224478670888>',
