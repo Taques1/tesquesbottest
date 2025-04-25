@@ -167,12 +167,14 @@ if (!fs.existsSync(fontPath)) {
     return message.reply('A fonte personalizada não foi encontrada! Verifique o caminho da fonte.');
 }
 
-// Agora, continue com a lógica do Canvas como você já fez
-ctx.font = 'bold 20px Helsinki';
-ctx.fillStyle = '#ffffff';
-ctx.textAlign = 'center';
-ctx.textBaseline = 'middle'; // Adicionando textBaseline
-ctx.fillText(`${amor}%`, canvas.width / 2, barY + barHeight / 2);
+const fontPath = path.resolve(__dirname, '..', 'fonts', 'helsinki.ttf');
+const fs = require('fs');
+if (!fs.existsSync(fontPath)) {
+    return message.reply('A fonte personalizada não foi encontrada! Verifique o caminho da fonte.');
+}
+
+Canvas.registerFont(fontPath, { family: 'Helsinki' }); // <- ESSA LINHA AQUI É O QUE FALTAVA
+
 
 
 
