@@ -159,12 +159,14 @@ module.exports = {
             ctx.lineWidth = 3;
             drawRoundedRect(ctx, barX, barY, barWidth, barHeight, barRadius, null, true);
 
-            const fontPath = path.resolve(__dirname, 'fonts', 'helsinki.ttf');
-            ctx.font = 'bold 20px Helsinki';
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle'; // Adicionando textBaseline
-            ctx.fillText(`${amor}%`, canvas.width / 2, barY + barHeight / 2);
+           const fontPath = path.resolve(__dirname, 'fonts', 'helsinki.ttf');
+ctx.registerFont(fontPath, { family: 'Helsinki' });  // Registra a fonte
+ctx.font = 'bold 20px Helsinki';  // Usa a fonte registrada
+ctx.fillStyle = '#ffffff';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle'; // Adicionando textBaseline
+ctx.fillText(`${amor}%`, canvas.width / 2, barY + barHeight / 2);
+
 
             const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'ship.png' });
 
