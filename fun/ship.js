@@ -162,15 +162,10 @@ module.exports = {
      
 
 
+const { registerFont } = require('canvas');
 
-const fontPath = path.resolve(__dirname, 'fonts', 'helsinki.ttf');
-
-const fs = require('fs');
-if (!fs.existsSync(fontPath)) {
-    return message.reply('A fonte personalizada não foi encontrada! Verifique o caminho da fonte.');
-}
-
-Canvas.registerFont(fontPath, { family: 'Helsinki' }); // <- ESSA LINHA AQUI É O QUE FALTAVA
+// Caminho até a fonte personalizada
+registerFont(path.resolve(__dirname, 'fonts', 'helsinki.ttf'), { family: 'Helsinki' });
 
 
 
