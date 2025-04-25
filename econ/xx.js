@@ -1,21 +1,7 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { QuickDB } = require('quick.db');
-const db = new QuickDB();
 
-// Mapeamento de emojis personalizados (atualize com IDs reais)
-const emotes = {
-  varadepesca: '<:varadepesca:1365397727198052562>',
-  moeda: '<:emoji_26:1077739873143890011>',
-  isca_magnetica: '<:iscamagnetica:1280258865606164652>',
-  isca_dupla: '<:iscadupla:1365398227636981780>',
-  isca_tripla: '<:iscatripla:1365397725201436702>',
-  isca_comum: '<:iscadepesca:1365398224478670888>',
-  isca_especial: '<:isca2:1365398230053027961>',
-  peixe_pequeno: '<:peixep:1365399244667617320>',
-  peixe_medio: '<:peixem:1365399242029404241>',
-  peixe_grande: '<:paixeg:1365399956516638790>',
-  peixe_lendario: '<:peixel:1365399951315697744>'
-};
+const db = new QuickDB();
 
 module.exports = {
   name: 'pescar',
@@ -23,199 +9,131 @@ module.exports = {
   execute: async (client, message, args) => {
     const userId = message.author.id;
 
-    // Verifica vara de pesca
-    const rodCount = await db.get(`inventory_${userId}.vara_de_pesca`) || 0;
-    if (rodCount < 1) return message.reply('🎣 Você precisa de uma **Vara de Pesca** para pescar.');
+    const emojis = {
+      vara: '<:varadepesca:1365397727198052562>',
+      moeda: '<:emoji_26:1077739873143890011>',
+      isca_magnetica: '<:iscamagnetica:1280258865606164652>',
+      isca_dupla: '<:iscadupla:1365398227636981780>',
+      isca_tripla: '<:iscatripla:1365397725201436702>',
+      isca_comum: '<:iscadepesca:1365398224478670888>',
+      isca_especial: '<:isca2:1365398230053027961>',
+      peixe_pequeno: '<:peixep:1365399244667617320>',
+      peixe_medio: '<:peixem:1365399242029404241>',
+      peixe_grande: '<:paixeg:1365399956516638790>',
+      peixe_lendario: '<:peixel:1365399951315697744>'
+    };
 
-    // Lista de iscas disponíveis
-    const baitTypes = ['isca_magnetica', 'isca_dupla', 'isca_tripla', 'isca_comum', 'isca_especial'];
-    const ownedBaits = [];
-    for (const bait of baitTypes) {
-      const qty = await db.get(`inventory_${userId}.${bait}`) || 0;
-      if (qty > 0) ownedBaits.push(bait);
-    }
+    const fishingRod = await db.get(`inventory_${userId}.vara_de_pesca`) || 0;
+    if (fishingRod < 1) return message.reply(`Você precisa de uma vara de pesca ${emojis.vara} para pescar. Compre uma na loja!`);
 
-    let selectedBait;
-    // Se tiver mais de uma isca, mostra select menu
-    if (ownedBaits.length > 1) {
-      const menu = new StringSelectMenuBuilder()
-        .setCustomId('select_bait')
-        .setPlaceholder('Selecione sua isca')
-        .addOptions(
-          ...ownedBaits.map(bait => ({
-            label: bait.replace('isca_', '').toUpperCase(),
-            value: bait,
-            emoji: emotes[bait]
-          }))
-        );
-      const row = new ActionRowBuilder().addComponents(menu);
-      const baitMsg = await message.channel.send({ content: '🎣 Escolha uma isca para começar:', components: [row] });
+    const inventory = await db.get(`inventory_${userId}`) || {};
 
-      const selCollector = baitMsg.createMessageComponentCollector({ filter: i => i.user.id === userId, max: 1, time: 30000 });
-      const sel = await new Promise(resolve => {
-        selCollector.on('collect', i => {
-          i.deferUpdate();
-          resolve(i.values[0]);
-        });
-        selCollector.on('end', () => resolve(null));
-      });
-      selectedBait = sel;
-      await baitMsg.delete().catch(() => {});
-    } else {
-      // Se tiver apenas uma ou nenhuma, usa a única ou nenhuma
-      selectedBait = ownedBaits[0] || null;
-    }
+    const fishTypes = [
+      { name: `${emojis.peixe_pequeno} Peixe Pequeno`, value: 100, chance: 0.6 },
+      { name: `${emojis.peixe_medio} Peixe Médio`, value: 500, chance: 0.3 },
+      { name: `${emojis.peixe_grande} Peixe Grande`, value: 1000, chance: 0.09 },
+      { name: `${emojis.peixe_lendario} Peixe Lendário`, value: 5000, chance: 0.01 }
+    ];
 
-    // Botão de prontidão
-    const readyButton = new ButtonBuilder()
-      .setCustomId('ready_fish')
-      .setLabel('Pronto')
-      .setStyle(ButtonStyle.Success);
-    const readyRow = new ActionRowBuilder().addComponents(readyButton);
-    const readyEmbed = new EmbedBuilder()
-      .setTitle('🎣 Preparado para Pescar?')
-      .setDescription('Clique em **Pronto** quando estiver preparado.')
-      .setColor('#00AA00');
-    const readyMsg = await message.channel.send({ embeds: [readyEmbed], components: [readyRow] });
+    const applyBaitBonus = (fishList, baitType) => {
+      if (baitType === 'isca_comum') {
+        // Aumenta levemente a chance dos peixes melhores
+        fishList[0].chance -= 0.2; // pequeno
+        fishList[1].chance += 0.1;
+        fishList[2].chance += 0.08;
+        fishList[3].chance += 0.02;
+      }
+      return fishList;
+    };
 
-    const readyCollector = readyMsg.createMessageComponentCollector({ filter: i => i.customId === 'ready_fish' && i.user.id === userId, max: 1, time: 30000 });
-    readyCollector.on('collect', async i => {
-      await i.update({ components: [] });
-
-      // Define tipos de peixe
-      const fishTypes = [
-        { key: 'peixe_pequeno', name: 'Peixe Pequeno', value: 100, chance: 0.6 },
-        { key: 'peixe_medio', name: 'Peixe Médio', value: 500, chance: 0.3 },
-        { key: 'peixe_grande', name: 'Peixe Grande', value: 1000, chance: 0.09 },
-        { key: 'peixe_lendario', name: 'Peixe Lendário', value: 5000, chance: 0.01 }
-      ];
-      // Determina peixe antes
+    const getFishingResult = () => {
+      let adjustedFish = JSON.parse(JSON.stringify(fishTypes));
+      if (inventory.isca_comum > 0) adjustedFish = applyBaitBonus(adjustedFish, 'isca_comum');
       const rand = Math.random();
-      let cumulative = 0;
-      const fish = fishTypes.find(f => {
-        cumulative += f.chance;
-        return rand <= cumulative;
+      let cumulativeChance = 0;
+      for (const fish of adjustedFish) {
+        cumulativeChance += fish.chance;
+        if (rand <= cumulativeChance) return fish;
+      }
+    };
+
+    const startFishingEmbed = new EmbedBuilder()
+      .setTitle('🎣 Pesca!')
+      .setDescription('Espere o momento certo e aperte o botão "Pescar" para capturar o peixe!')
+      .setColor('#1E90FF');
+
+    const fishButton = new ButtonBuilder()
+      .setCustomId('catch_fish')
+      .setLabel('Pescar')
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(true);
+
+    const row = new ActionRowBuilder().addComponents(fishButton);
+    const msg = await message.channel.send({ embeds: [startFishingEmbed], components: [row] });
+
+    const delay = Math.random() * 1000 + 2000;
+
+    setTimeout(async () => {
+      fishButton.setDisabled(false);
+      await msg.edit({ components: [row] });
+
+      const filter = (i) => i.customId === 'catch_fish' && i.user.id === userId;
+      const collector = msg.createMessageComponentCollector({ filter, time: 2000 });
+
+      let fishCaught = false;
+      collector.on('collect', async (i) => {
+        fishCaught = true;
+
+        let results = [];
+        let amount = 1;
+        if (inventory.isca_dupla > 0 && Math.random() < 0.7) amount = 2;
+        if (inventory.isca_tripla > 0 && Math.random() < 0.5) amount = 3;
+
+        for (let j = 0; j < amount; j++) {
+          const fish = getFishingResult();
+          if (fish) {
+            results.push(fish);
+            await db.add(`wallet_${userId}`, fish.value);
+          }
+        }
+
+        await db.add(`inventory_${userId}.vara_de_pesca`, -1);
+
+        let resultMessage = results.map(f => `🎉 Você pescou um **${f.name}** e ganhou ${emojis.moeda} ${f.value}`).join('\n');
+
+        if (results.some(f => f.name.includes('Peixe Lendário'))) {
+          const hasAchiev = await db.get(`achievements_${userId}.fish_legendary`);
+          if (!hasAchiev) {
+            await db.set(`achievements_${userId}.fish_legendary`, true);
+            resultMessage += `\n🏆 Parabéns! Conquista desbloqueada: **Pesque um Peixe Lendário**!`;
+          }
+        }
+
+        if (inventory.isca_especial > 0 && Math.random() < 0.4) {
+          const bonus = Math.floor(Math.random() * 2500 + 1000);
+          await db.add(`wallet_${userId}`, bonus);
+          resultMessage += `\n🌟 A **Isca Especial ${emojis.isca_especial}** ativou um portal e você encontrou ${emojis.moeda} ${bonus} escondidas num baú submerso!`;
+        }
+
+        const resultEmbed = new EmbedBuilder()
+          .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL() })
+          .setColor('#1E90FF')
+          .setTitle('🎣 Resultado da Pesca')
+          .setDescription(resultMessage);
+
+        await i.update({ embeds: [resultEmbed], components: [] });
       });
 
-      // Prepara botão de captura
-      const catchButton = new ButtonBuilder()
-        .setCustomId('catch_fish')
-        .setLabel('Pescar')
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(true);
-      const catchRow = new ActionRowBuilder().addComponents(catchButton);
+      collector.on('end', async (_, reason) => {
+        if (!fishCaught && reason === 'time') {
+          const escapeEmbed = new EmbedBuilder()
+            .setTitle('🚨 O Peixe Fugiu!')
+            .setDescription('O peixe escapou enquanto você hesitava! Seja mais rápido na próxima vez.')
+            .setColor('#FF4500');
 
-      // Embed de pesca iniciada
-      const startEmbed = new EmbedBuilder()
-        .setTitle('🎣 Pesca Iniciada!')
-        .setDescription(`${emotes.varadepesca} ${selectedBait ? emotes[selectedBait] + ' **' + selectedBait.replace('isca_', '').toUpperCase() + ' ATIVA**' : '⚠️ **Nenhuma Isca Equip.**'}`)
-        
-      const fishMsg = await message.channel.send({ embeds: [startEmbed], components: [catchRow] });
-
-      // Delay para ativar botão e tempo de captura baseado na raridade
-      const enableDelay = Math.floor(Math.random() * 1000) + 2000;
-      const activeTime = Math.floor((1 - fish.chance) * 3000) + 2000;
-
-      setTimeout(async () => {
-        catchButton.setDisabled(false);
-        await fishMsg.edit({ components: [catchRow] });
-
-        const filterCatch = inter => inter.customId === 'catch_fish' && inter.user.id === userId;
-        const catchCollector = fishMsg.createMessageComponentCollector({ filter: filterCatch, time: activeTime });
-        let caught = false;
-
-        catchCollector.on('collect', async inter => {
-          caught = true;
-          await inter.deferUpdate();
-
-          // Lógica de recompensa
-          const rewards = [];
-          // Valor do peixe
-          await db.add(`wallet_${userId}`, fish.value);
-          rewards.push(`${emotes[fish.key]} ${fish.name} ${emotes.moeda}${fish.value}`);
-          // Remove vara
-          await db.add(`inventory_${userId}.vara_de_pesca`, -1);
-
-          // Conquista de peixe lendário
-          const extras = [];
-          if (fish.key === 'peixe_lendario') {
-            const has = await db.get(`achievements_${userId}.fish_legendary`);
-            if (!has) {
-              await db.set(`achievements_${userId}.fish_legendary`, true);
-              extras.push('🏆 Conquista desbloqueada: Pesque um Peixe Lendário');
-            }
-          }
-
-          // Efeito da isca equipada
-          const losses = [];
-          if (selectedBait) {
-            const qty = await db.get(`inventory_${userId}.${selectedBait}`) || 0;
-            if (qty > 0) {
-              if (selectedBait === 'isca_dupla') {
-                for (let i = 0; i < 2; i++) {
-                  const extraFish = fishTypes[Math.floor(Math.random() * fishTypes.length)];
-                  await db.add(`wallet_${userId}`, extraFish.value);
-                  rewards.push(`${emotes[extraFish.key]} ${extraFish.name} (extra) ${emotes.moeda}${extraFish.value}`);
-                }
-              } else if (selectedBait === 'isca_tripla') {
-                for (let i = 0; i < 3; i++) {
-                  const extraFish = fishTypes[Math.floor(Math.random() * fishTypes.length)];
-                  await db.add(`wallet_${userId}`, extraFish.value);
-                  rewards.push(`${emotes[extraFish.key]} ${extraFish.name} (extra) ${emotes.moeda}${extraFish.value}`);
-                }
-              } else if (selectedBait === 'isca_magnetica') {
-                if (Math.random() < 0.5) {
-                  extras.push(`${emotes.isca_magnetica} Sua Isca Magnética brilhou...`);
-                  if (Math.random() < 0.8) {
-                    const chestTypes = [
-                      { name: 'Baú Comum', value: 100 },
-                      { name: 'Baú Incomum', value: 250 },
-                      { name: 'Baú Raro', value: 500 },
-                      { name: 'Baú Épico', value: 1000 },
-                      { name: 'Baú Lendário', value: 10000 }
-                    ];
-                    const chest = chestTypes[Math.floor(Math.random() * chestTypes.length)];
-                    await db.add(`wallet_${userId}`, chest.value);
-                    rewards.push(`🎁 ${chest.name} ${emotes.moeda}${chest.value}`);
-                  } else {
-                    extras.push('🔍 Era só uma tralha qualquer.');
-                  }
-                }
-                if (Math.random() < 0.3) {
-                  await db.add(`inventory_${userId}.isca_magnetica`, -1);
-                  losses.push('💔 Sua Isca Magnética quebrou!');
-                }
-              }
-              await db.add(`inventory_${userId}.${selectedBait}`, -1);
-            }
-          }
-
-          // Monta embed de resultado
-          const lines = [];
-          lines.push(rewards.join('\n'));
-          if (extras.length) lines.push(extras.join('\n'));
-          if (losses.length) lines.push(losses.join('\n'));
-
-          const resultEmbed = new EmbedBuilder()
-            .setTitle('🎣 Resultado da Pesca')
-            .setDescription(lines.join('\n\n----------------------------------------------------------\n'))
-            .setFooter({ text: `${emotes.varadepesca}  **${selectedBait ? selectedBait.replace('isca_', '').toUpperCase() + ' ATIVA**' : 'Nenhuma Isca ATIVA**'}` });
-            .setColor('#1E90FF');
-
-          await fishMsg.edit({ embeds: [resultEmbed], components: [] });
-        });
-
-        catchCollector.on('end', async (_, reason) => {
-          if (!caught && reason === 'time') {
-            const escapeEmbed = new EmbedBuilder()
-              .setTitle('🚨 O Peixe Fugiu!')
-              .setDescription('O peixe escapou enquanto você hesitava!')
-              .setFooter({ text: `${emotes.varadepesca}  **${selectedBait ? selectedBait.replace('isca_', '').toUpperCase() + ' ATIVA**' : 'Nenhuma Isca ATIVA**'}` })
-              .setColor('#FF4500');
-            await fishMsg.edit({ embeds: [escapeEmbed], components: [] });
-          }
-        });
-      }, enableDelay);
-    });
-  }
+          await msg.edit({ embeds: [escapeEmbed], components: [] });
+        }
+      });
+    }, delay);
+  },
 };
