@@ -159,7 +159,7 @@ module.exports = {
             ctx.lineWidth = 3;
             drawRoundedRect(ctx, barX, barY, barWidth, barHeight, barRadius, null, true);
 
-       const fontPath = path.resolve(__dirname, 'fonts', 'helsinki.ttf');
+      const fontPath = path.resolve(__dirname, '..', 'fonts', 'helsinki.ttf');
 
 // Adicione uma verificação para garantir que o caminho da fonte esteja correto
 const fs = require('fs');
