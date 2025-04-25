@@ -109,7 +109,7 @@ module.exports = {
       const startEmbed = new EmbedBuilder()
         .setTitle('🎣 Pesca Iniciada!')
         .setDescription(`${emotes.varadepesca} ${selectedBait ? emotes[selectedBait] + ' **' + selectedBait.replace('isca_', '').toUpperCase() + ' ATIVA**' : '⚠️ **Nenhuma Isca Equip.**'}`)
-        .setColor('#1E90FF');
+        
       const fishMsg = await message.channel.send({ embeds: [startEmbed], components: [catchRow] });
 
       // Delay para ativar botão e tempo de captura baseado na raridade
