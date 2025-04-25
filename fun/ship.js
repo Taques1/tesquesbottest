@@ -159,13 +159,9 @@ module.exports = {
             ctx.lineWidth = 3;
             drawRoundedRect(ctx, barX, barY, barWidth, barHeight, barRadius, null, true);
 
-      const fontPath = path.resolve(__dirname, '..', 'fonts', 'helsinki.ttf');
+     
 
-// Adicione uma verificação para garantir que o caminho da fonte esteja correto
-const fs = require('fs');
-if (!fs.existsSync(fontPath)) {
-    return message.reply('A fonte personalizada não foi encontrada! Verifique o caminho da fonte.');
-}
+
 
 const fontPath = path.resolve(__dirname, 'fonts', 'helsinki.ttf');
 
