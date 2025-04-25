@@ -52,7 +52,7 @@ module.exports = {
                         await db.delete(`wallet_${userId}`);
                         await db.delete(`bank_${userId}`);
                         await db.delete(`inventory_${userId}`);
-                        await db.delete(`conquistas_${userId}`);
+                       await db.delete(`achievements_${userId}`);
                         await db.delete(`max_items_${userId}`);
                         await db.delete(`dailyStreak_${userId}`);
                         await db.delete(`lastDaily_${userId}`);
