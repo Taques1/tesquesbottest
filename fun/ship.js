@@ -4,6 +4,8 @@ const fetch = require('node-fetch');
 const sharp = require('sharp');
 const path = require('path');
 
+
+
 module.exports = {
     name: 'ship',
     description: 'Ship de dois usuários',
@@ -157,8 +159,8 @@ module.exports = {
             ctx.lineWidth = 3;
             drawRoundedRect(ctx, barX, barY, barWidth, barHeight, barRadius, null, true);
 
-            const fontPath = path.resolve(__dirname, 'fonts', 'helsinki.ttf'); // Ajuste no caminho
-            ctx.font = 'bold 20px "' + fontPath + '"'; // Certifique-se de que o caminho da fonte esteja correto
+            const fontPath = path.resolve(__dirname, 'fonts', 'helsinki.ttf');
+            ctx.font = 'bold 20px Helsinki';
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle'; // Adicionando textBaseline
@@ -166,45 +168,45 @@ module.exports = {
 
             const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'ship.png' });
 
-            // Construindo a mensagem de descrição
-            const nomeship = `${member1.username.slice(0, 3)}-${member2.username.slice(0, 3)}`; // Fusão dos nomes
-            let desc;
-            if (amor > 90) {
-                desc = `:sparkling_heart: HMMM, vai rolar ou não vai? :sparkling_heart:\n:heart: \`${nomeship}\` Esse é o casal perfeito!`;
-            } else if (amor >= 70) {
-                desc = `:sparkling_heart: HMMM, vai rolar ou não vai? :sparkling_heart:\n:heart: \`${nomeship}\` Esses aqui já tão se pegando e n contaram pra ngm!`;
-            } else if (amor >= 45) {
-                desc = `:sparkling_heart: HMMM, vai rolar ou não vai? :sparkling_heart:\n:no_mouth: \`${nomeship}\` Talvez só precisa o \`${member2.username}\` querer...`;
-            } else {
-                desc = `:sparkling_heart: HMMM, vai rolar ou não vai? :sparkling_heart:\n:cry: \`${nomeship}\` queria muito dizer que é possível, mas...`;
+             // Construindo a mensagem de descrição
+                        const nomeship = `${member1.username.slice(0, 3)}-${member2.username.slice(0, 3)}`; // Fusão dos nomes
+                        let desc;
+                        if (amor > 90) {
+                            desc = `:sparkling_heart: HMMM, vai rolar ou não vai? :sparkling_heart:\n:heart: \`${nomeship}\` Esse é o casal perfeito!`;
+                        } else if (amor >= 70) {
+                            desc = `:sparkling_heart: HMMM, vai rolar ou não vai? :sparkling_heart:\n:heart: \`${nomeship}\` Esses aqui já tão se pegando e n contaram pra ngm!`;
+                        } else if (amor >= 45) {
+                            desc = `:sparkling_heart: HMMM, vai rolar ou não vai? :sparkling_heart:\n:no_mouth: \`${nomeship}\` Talvez só precisa o \`${member2.username}\` querer...`;
+                        } else {
+                            desc = `:sparkling_heart: HMMM, vai rolar ou não vai? :sparkling_heart:\n:cry: \`${nomeship}\` queria muito dizer que é possível, mas...`;
+                        }
+
+                        message.reply({ content: desc, files: [attachment] });
+
+                    } catch (error) {
+                        console.error('Erro ao processar as imagens:', error);
+                        message.reply('Ocorreu um erro ao tentar criar a imagem do ship.');
+                    }
+                },
+            };
+
+            function drawRoundedRect(ctx, x, y, width, height, radius, fillColor, stroke = false) {
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + width - radius, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                ctx.lineTo(x + width, y + height - radius);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                ctx.lineTo(x + radius, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
+                if (fillColor) {
+                    ctx.fillStyle = fillColor;
+                    ctx.fill();
+                }
+                if (stroke) {
+                    ctx.stroke();
+                }
             }
-
-            message.reply({ content: desc, files: [attachment] });
-
-        } catch (error) {
-            console.error('Erro ao processar as imagens:', error);
-            message.reply('Ocorreu um erro ao tentar criar a imagem do ship.');
-        }
-    },
-};
-
-function drawRoundedRect(ctx, x, y, width, height, radius, fillColor, stroke = false) {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-    ctx.lineTo(x + radius, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
-    if (fillColor) {
-        ctx.fillStyle = fillColor;
-        ctx.fill();
-    }
-    if (stroke) {
-        ctx.stroke();
-    }
-}
