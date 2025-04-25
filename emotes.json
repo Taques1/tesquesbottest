@@ -68,12 +68,19 @@
     "ficha": "<:emoji_6:1279975481730400256>",
     "galo": "<:emoji_8:1279975505487200357>",
     "raspadinha": "<:emoji_5:1279975439456010311>",
-    "vara": "<:emoji_9:1280258843192070156>",
-    "isca": "<:emoji_10:1280258865606164652>",
+    "vara": "<:varadepesca:1365397727198052562>",
+    "iscamagnetica": "<:emoji_10:1280258865606164652>",
       "potion": "🧪",
       "crystal": "🔮",
     "apatita": "<:emoji_52:1357823543101886464>",
     "branco": "<:emoji_53:1359318290899533975>",
-    "verde_limao": "<:emoji_54:1365092332399231037>"
-
+    "verde_limao": "<:emoji_54:1365092332399231037>",
+    "isca_dupla": "'<:iscadupla:1365398227636981780>",
+    "isca_tripla": "<:iscatripla:1365397725201436702>",
+    "isca_comum": "<:iscadepesca:1365398224478670888>",
+    "isca_especial": "<:isca2:1365398230053027961>",
+     "peixe_pequeno": "<:peixep:1365399244667617320>",
+   "peixe_medio": "<:peixem:1365399242029404241>",
+    "peixe_grande": "<:paixeg:1365399956516638790>",
+    "peixe_lendario": "<:peixel:1365399951315697744>"
 }
