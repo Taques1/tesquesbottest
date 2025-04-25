@@ -167,7 +167,8 @@ if (!fs.existsSync(fontPath)) {
     return message.reply('A fonte personalizada não foi encontrada! Verifique o caminho da fonte.');
 }
 
-const fontPath = path.resolve(__dirname, '..', 'fonts', 'helsinki.ttf');
+const fontPath = path.resolve(__dirname, 'fonts', 'helsinki.ttf');
+
 const fs = require('fs');
 if (!fs.existsSync(fontPath)) {
     return message.reply('A fonte personalizada não foi encontrada! Verifique o caminho da fonte.');
