@@ -200,6 +200,7 @@ module.exports = {
             .setTitle('🎣 Resultado da Pesca')
             .setDescription(lines.join('\n\n----------------------------------------------------------\n'))
             .setFooter({ text: `${emotes.varadepesca}  **${selectedBait ? selectedBait.replace('isca_', '').toUpperCase() + ' ATIVA**' : 'Nenhuma Isca ATIVA**'}` });
+            .setColor('#1E90FF');
 
           await fishMsg.edit({ embeds: [resultEmbed], components: [] });
         });
