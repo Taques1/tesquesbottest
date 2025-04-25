@@ -1,23 +1,23 @@
 const { QuickDB } = require('quick.db');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, PermissionsBitField } = require('discord.js');
 const db = new QuickDB();
 
 module.exports = {
     name: 'reseteco',
     description: 'Reseta todo o sistema de economia de um servidor',
     async execute(client, message, args) {
-        if (!message.member.permissions.has('Administrator')) {
+        if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
             return message.reply('Você não tem permissão para realizar esta ação! Apenas administradores podem invocar este poder.');
         }
 
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('confirm_reset')
-                .setLabel('Confirmar Reset')
+                .setLabel('✅ Confirmar Reset')
                 .setStyle(ButtonStyle.Danger),
             new ButtonBuilder()
                 .setCustomId('cancel_reset')
-                .setLabel('Cancelar Reset')
+                .setLabel('❌ Cancelar Reset')
                 .setStyle(ButtonStyle.Secondary)
         );
 
@@ -45,6 +45,9 @@ module.exports = {
                         .map(entry => entry.id)
                         .filter(key => key.startsWith("wallet_"));
 
+                    let usersResetados = 0;
+                    let conquistasRemovidas = 0;
+
                     for (const key of userKeys) {
                         const userId = key.replace("wallet_", "");
                         if (/^(bot_|Bot_)/i.test(userId)) continue;
@@ -52,16 +55,23 @@ module.exports = {
                         await db.delete(`wallet_${userId}`);
                         await db.delete(`bank_${userId}`);
                         await db.delete(`inventory_${userId}`);
-                       await db.delete(`achievements_${userId}`);
                         await db.delete(`max_items_${userId}`);
                         await db.delete(`dailyStreak_${userId}`);
                         await db.delete(`lastDaily_${userId}`);
                         await db.delete(`role_bought_${userId}`);
                         await db.delete(`xp_${userId}`);
                         await db.delete(`level_${userId}`);
+                        
+                        const conquistas = await db.get(`achievements_${userId}`);
+                        if (conquistas) {
+                            await db.delete(`achievements_${userId}`);
+                            conquistasRemovidas++;
+                        }
+
+                        usersResetados++;
                     }
 
-                    // Resetando dados globais do servidor (se tiver algum específico)
+                    // Resetando dados globais do servidor (se houver)
                     await db.delete(`server_wallet`);
                     await db.delete(`server_bank`);
                     await db.delete(`server_inventory`);
@@ -69,7 +79,7 @@ module.exports = {
                     const successEmbed = new EmbedBuilder()
                         .setColor('#00FF00')
                         .setTitle('💥 Reset Completo!')
-                        .setDescription(`A economia de **todos os usuários**, mesmo os que saíram do servidor, foi **resetada com sucesso**!`)
+                        .setDescription(`A economia de **${usersResetados} usuários** foi **resetada com sucesso**!\n\n🏅 Conquistas apagadas de **${conquistasRemovidas} usuários**.`)
                         .setFooter({ text: 'Ação concluída com sucesso!' });
 
                     await interaction.update({
@@ -78,6 +88,8 @@ module.exports = {
                     });
 
                     isConfirmed = true;
+                    collector.stop('interaction_handled');
+
                 } catch (err) {
                     console.error(err);
                     const errorEmbed = new EmbedBuilder()
@@ -91,6 +103,7 @@ module.exports = {
                         components: []
                     });
                 }
+
             } else if (interaction.customId === 'cancel_reset') {
                 const cancelEmbed = new EmbedBuilder()
                     .setColor('#FFFF00')
@@ -103,6 +116,7 @@ module.exports = {
                     components: []
                 });
                 await confirmMessage.delete();
+                collector.stop('cancelled');
             }
         });
 
@@ -122,4 +136,3 @@ module.exports = {
         });
     }
 };
- 
