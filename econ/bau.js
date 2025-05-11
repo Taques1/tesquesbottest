@@ -155,7 +155,83 @@ module.exports = {
 
       embed.setDescription(description);
 
-      await message.channel.send({ embeds: [embed] });
+      const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
+// Cria o botão "Abrir Outro"
+const row = new ActionRowBuilder().addComponents(
+  new ButtonBuilder()
+    .setCustomId(`abrirOutro_${message.author.id}`)
+    .setLabel('Abrir Outro')
+    .setStyle(ButtonStyle.Primary)
+);
+
+// Envia o embed com o botão
+const msg = await message.channel.send({ embeds: [embed], components: [row] });
+
+// Cria o coletor de interações
+const filter = (interaction) =>
+  interaction.customId === `abrirOutro_${message.author.id}` &&
+  interaction.user.id === message.author.id;
+
+const collector = msg.createMessageComponentCollector({ filter, time: 60000, max: 1 });
+
+collector.on('collect', async (interaction) => {
+  const inventoryAtual = await db.get(`inventory_${userId}`);
+  if (!inventoryAtual || inventoryAtual['chave'] <= 0) {
+    return interaction.reply({ content: 'Você não tem mais chaves!', ephemeral: true });
+  }
+
+  // Gasta mais uma chave
+  await db.add(`inventory_${userId}.chave`, -1);
+
+  // Repete o sorteio do item (mesma lógica do começo do for)
+  const randomItem = Math.floor(Math.random() * totalItemPercentage);
+  let currentItemPercentage = 0;
+  let itemSelecionado;
+
+  for (const item of items) {
+    currentItemPercentage += item.percentage;
+    if (randomItem < currentItemPercentage) {
+      itemSelecionado = item;
+      break;
+    }
+  }
+
+  await db.add(`wallet_${userId}`, itemSelecionado.price);
+
+  const novoEmbed = new EmbedBuilder()
+    .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL() })
+    .setTitle(`**Baú ${itemSelecionado.name}**`)
+    .setColor(itemSelecionado.color);
+
+  let description = `Parabéns!\nVocê abriu o baú e encontrou: **${emotes.moeda}${itemSelecionado.price}**`;
+
+  let additionalItemsFound = [];
+  for (const additionalItem of itemSelecionado.additionalItems) {
+    const randomChance = Math.random() * 100;
+    if (randomChance < additionalItem.percentage) {
+      await db.add(`inventory_${userId}.${additionalItem.name.toLowerCase()}`, 1);
+      additionalItemsFound.push(additionalItem.name);
+    }
+  }
+
+  if (additionalItemsFound.length > 0) {
+    description += `\nVocê também recebeu: **${additionalItemsFound.join(', ')}**!`;
+  }
+
+  if (itemSelecionado.rarity === 'lendario') {
+    const achievements = await db.get(`achievements_${userId}`) || {};
+    if (!achievements['legendary_chest']) {
+      await db.set(`achievements_${userId}.legendary_chest`, true);
+      description += `\n\nParabéns! Você desbloqueou a conquista **Legendary Chest**!`;
+    }
+  }
+
+  novoEmbed.setDescription(description);
+
+  await interaction.reply({ embeds: [novoEmbed], components: [row] });
+});
+
     }
   }
 };
